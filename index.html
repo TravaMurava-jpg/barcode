@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barcode Scanner Web Version</title>
+<script src="https://unpkg.com/@ericblade/quagga2"></script> <!-- Including QuaggaJS from CDN -->
+<style>
+    #interactive.viewport {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    z-index: -1; /* back the camera view */
+}
+    #modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: auto;
+      background-color: rgb(0,0,0);
+      background-color: rgba(0,0,0,0.4);
+      padding-top: 60px;
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+    .close {
+      color: #aaaaaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<div id="interactive" class="viewport"></div>
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <img id="item-image" src="" alt="Item Image" style="width:100%;max-width:300px"/>
+    <p id="item-name">Item Name: </p>
+    <p id="item-price">Price: </p>
+  </div>
+</div>
+
+<script>
+var hasStarted = false;
+function startScanner() {
+    Quagga.init({
+        inputStream: {
+            type: "LiveStream",
+            constraints: {
+                width: { min: 640 },
+                height: { min: 480 },
+                aspectRatio: { min: 1, max: 100 },
+                facingMode: "environment" // or user
+            },
+            target: document.querySelector('#interactive')    // Or '#yourElement' (optional)
+        },
+        locator: {
+            patchSize: "medium",
+            halfSample: true
+        },
+        numOfWorkers: 2,
+        decoder: {
+            readers: ["code_128_reader"] // List of barcode types to search for
+        },
+        locate: true
+    }, function(err) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        if (!hasStarted) {
+            Quagga.start();
+            hasStarted = true;
+        }
+    });
+
+    Quagga.onDetected(async function(data) {
+        Quagga.stop(); // Stop detecting new barcodes
+
+        var barcode = data.codeResult.code;
+
+        try {
+            const response = await fetch(`https://kdo.gate.0644.ru/api/v1/product/?id=${barcode}`);
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+
+            const result = await response.json();
+
+            if (result.status) {
+                document.getElementById('item-image').src = `https://${result.data.server_name}${result.data.img}`;
+                document.getElementById('item-name').textContent = 'Item Name: ' + result.data.name;
+                document.getElementById('item-price').textContent = 'Price: ' + result.data.price + ' ' + result.data.currency;
+
+                showModal();
+            } else {
+                // Handle case where barcode is not recognized or result.status is false
+                alert('Product not found.');
+                Quagga.start(); // Restart barcode detection
+            }
+        } catch (error) {
+            console.error('Error fetching the product data', error);
+            Quagga.start(); // Restart barcode detection
+        }
+    });
+}
+
+function showModal() {
+    var modal = document.getElementById("modal");
+    var span = document.getElementsByClassName("close")[0];
+
+    modal.style.display = "block";
+    span.onclick = function() {
+        modal.style.display = "none";
+        Quagga.start(); // Restart barcode detection when modal closed
+    }
+}
+
+window.onload = startScanner;
+</script>
+</body>
+</html>
