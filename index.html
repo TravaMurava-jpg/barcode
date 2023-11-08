@@ -6,6 +6,11 @@
 <title>Barcode Scanner Web Version</title>
 <script src="https://unpkg.com/@ericblade/quagga2"></script> <!-- Including QuaggaJS from CDN -->
 <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* This ensures padding doesn't affect the overall dimensions */
+}
     body, html {
       margin: 0;
       padding: 0;
@@ -13,17 +18,26 @@
       height: 100%;
       overflow: hidden; /* Prevent scrolling */
     }
-    
+    #interactive video {
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  object-fit: cover; /* Cover the full area */
+  position: absolute; /* Position it absolutely */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center it in the viewport */
+}
+
     #interactive.viewport {
-      position: relative; /* Changed from absolute to relative */
-      width: 100%;
-      height: 100%;
-      border: none;
-      margin: auto; /* Center-align the div */
-      display: flex; /* Use flexbox to center content */
-      align-items: center; /* Center content vertically */
-      justify-content: center; /* Center content horizontally */
-    }
+  width: 100vw; /* Ensure it takes up the full width */
+  height: 100vh; /* Full height */
+  position: relative; /* No need for absolute here */
+  margin: 0 auto; /* This centers the div */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
   
     video, canvas {
       max-width: 100%;
