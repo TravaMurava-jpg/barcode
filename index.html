@@ -84,7 +84,7 @@ function startScanner() {
             constraints: {
                 width: { min: 640 },
                 height: { min: 480 },
-                aspectRatio: { min: 1, max: 100 },
+                aspectRatio: { min: 1.33, max: 1.77 },
                 facingMode: "environment" // or user
             },
             target: document.querySelector('#interactive')    // Or '#yourElement' (optional)
@@ -104,6 +104,14 @@ function startScanner() {
             return;
         }
         if (!hasStarted) {
+            Quagga.onProcessed(function() {
+                var video = document.querySelector('#interactive video');
+                if (video) {
+                    video.style.width = '100%';
+                    video.style.height = 'auto';
+                }
+            });
+            
             Quagga.start();
             hasStarted = true;
         }
