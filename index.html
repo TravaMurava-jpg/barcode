@@ -28,6 +28,7 @@
     video, canvas {
       max-width: 100%;
       max-height: 100%;
+      object-fit: cover;
     }
     #modal {
       display: none;
@@ -77,6 +78,33 @@
 
 <script>
 var hasStarted = false;
+
+function setFullSizeVideo() {
+    var video = document.querySelector('#interactive video');
+    if (video) {
+        // Get the window dimensions
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        
+        // Calculate the aspect ratio of the video and the window
+        var videoAspectRatio = video.videoWidth / video.videoHeight;
+        var windowAspectRatio = w / h;
+
+        // Set the video dimensions based on the aspect ratio comparison
+        if (windowAspectRatio < videoAspectRatio) {
+            // Window is narrower than video aspect ratio
+            video.style.width = 'auto';
+            video.style.height = '100%';
+        } else {
+            // Window is wider than video aspect ratio
+            video.style.width = '100%';
+            video.style.height = 'auto';
+        }
+    }
+}
+
+
+
 function startScanner() {
     Quagga.init({
         inputStream: {
@@ -108,7 +136,8 @@ function startScanner() {
                 var video = document.querySelector('#interactive video');
                 if (video) {
                     video.style.width = '100%';
-                    video.style.height = 'auto';
+                    video.style.height = '100%'; // Changed from 'auto' to '100%'
+                    video.style.objectFit = 'cover'; // Added to ensure the video covers the available space
                 }
             });
             
