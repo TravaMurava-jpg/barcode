@@ -176,7 +176,7 @@ function initializeScanner() {
 
     Quagga.onDetected(function(data) {
                 var barcode = data.codeResult.code;
-                stopScanner();  // Stop scanner on detection
+                Quagga.pause();
 
                 window.flutter_inappwebview.callHandler('BarcodeData', barcode)
                     .then(function(result) {
@@ -185,6 +185,9 @@ function initializeScanner() {
             });
         }
 
+        function resumeScanner() {
+    Quagga.start();
+}
 
 
         function showModal() {
