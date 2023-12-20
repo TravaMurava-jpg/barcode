@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Barcode Scanner Web Version</title>
 <script src="https://unpkg.com/@ericblade/quagga2"></script> <!-- Including QuaggaJS from CDN -->
+<script type="application/javascript" src="/assets/packages/flutter_inappwebview_web/assets/web/web_support.js" defer></script>
+</head>
+
 <style>
     * {
   margin: 0;
@@ -144,7 +147,7 @@ function startScanner() {
         if (err) {
             console.log(err);
             return;
-        }
+        }   
         if (!hasStarted) {
             Quagga.onProcessed(function() {
                 var video = document.querySelector('#interactive video');
@@ -161,35 +164,18 @@ function startScanner() {
     });
 
     Quagga.onDetected(async function(data) {
-        Quagga.stop(); // Stop detecting new barcodes
 
-        var barcode = data.codeResult.code;
+    var barcode = data.codeResult.code;
 
-        try {
-            const response = await fetch(`https://kdo.gate.0644.ru/api/v1/product/?id=${barcode}`);
+    // Send the scanned barcode data to the Flutter app
+    window.flutter_inappwebview.callHandler('BarcodeData', barcode)
+        .then(function(result) {
+            // You can add code here to handle any response from the Flutter app
+        });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok ' + response.statusText);
-            }
+    // You can also optionally show a modal or perform other actions here
+});
 
-            const result = await response.json();
-
-            if (result.status) {
-                document.getElementById('item-image').src = `https://${result.data.server_name}${result.data.img}`;
-                document.getElementById('item-name').textContent = 'Item Name: ' + result.data.name;
-                document.getElementById('item-price').textContent = 'Price: ' + result.data.price + ' ' + result.data.currency;
-
-                showModal();
-            } else {
-                // Handle case where barcode is not recognized or result.status is false
-                alert('Product not found.');
-                Quagga.start(); // Restart barcode detection
-            }
-        } catch (error) {
-            console.error('Error fetching the product data', error);
-            Quagga.start(); // Restart barcode detection
-        }
-    });
 }
 
 function showModal() {
