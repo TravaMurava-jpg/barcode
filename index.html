@@ -94,7 +94,18 @@
 </div>
 
 <script>
-var hasStarted = false;
+    var hasStarted = false;
+
+    function stopScanner() {
+        Quagga.stop();
+    }
+
+    function startScanner() {
+        if (!hasStarted) {
+            Quagga.start();
+            hasStarted = true;
+        }
+    }
 
 function setFullSizeVideo() {
     var video = document.querySelector('#interactive video');
@@ -122,7 +133,7 @@ function setFullSizeVideo() {
 
 
 
-function startScanner() {
+function initializeScanner() {
     Quagga.init({
         inputStream: {
             type: "LiveStream",
@@ -163,33 +174,31 @@ function startScanner() {
         }
     });
 
-    Quagga.onDetected(async function(data) {
+    Quagga.onDetected(function(data) {
+                var barcode = data.codeResult.code;
+                stopScanner();  // Stop scanner on detection
 
-    var barcode = data.codeResult.code;
+                window.flutter_inappwebview.callHandler('BarcodeData', barcode)
+                    .then(function(result) {
+                        // Handle response from Flutter app
+                    });
+            });
+        }
 
-    // Send the scanned barcode data to the Flutter app
-    window.flutter_inappwebview.callHandler('BarcodeData', barcode)
-        .then(function(result) {
-            // You can add code here to handle any response from the Flutter app
-        });
 
-    // You can also optionally show a modal or perform other actions here
-});
 
-}
+        function showModal() {
+            var modal = document.getElementById("modal");
+            var span = document.getElementsByClassName("close")[0];
 
-function showModal() {
-    var modal = document.getElementById("modal");
-    var span = document.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+            span.onclick = function() {
+                modal.style.display = "none";
+                startScanner(); // Restart barcode detection when modal closed
+            }
+        }
 
-    modal.style.display = "block";
-    span.onclick = function() {
-        modal.style.display = "none";
-        Quagga.start(); // Restart barcode detection when modal closed
-    }
-}
-
-window.onload = startScanner;
+window.onload = initializeScanner;
 </script>
 </body>
 </html>
